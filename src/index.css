@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+html { background-color: #ffffff !important; margin: 0; padding: 0; }
+body { background-color: #ffffff !important; margin: 0; padding: 0; }
+#root { background-color: #ffffff; }
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+:root {
+  --nti-red: #E63312;
+  --nti-red-dark: #CC2A0F;
+  --nti-red-light: #FEF2F2;
+}
