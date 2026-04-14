@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   Building2, Home, Factory, Settings, Trees, MoreHorizontal,
   ScanLine, Box, FileText, Layers, Globe, Check, AlertCircle, Download,
@@ -9,7 +9,6 @@ import { calculateEstimate, getScannerDisplayName } from '@/lib/pricing'
 import { supabase } from '@/lib/supabase'
 import { sanitizeInquiry } from '@/lib/sanitize'
 import DatePicker from '@/components/ui/DatePicker'
-import FileUploadZone, { type UploadedFile } from '@/components/ui/FileUploadZone'
 import { checkRateLimit, getRateLimitMessage } from '@/lib/rateLimiter'
 import { generateInquiryPdf } from '@/lib/generatePdf'
 import { useConfetti } from '@/lib/useConfetti'
@@ -728,23 +727,6 @@ function Step5({
         </div>
       </div>
 
-      {/* Vedlegg */}
-      <div>
-        <label className={ui.label}>
-          Vedlegg{' '}
-          <span className="text-[#9B9B9B] font-normal">(valgfritt)</span>
-        </label>
-        <p className="text-[12px] text-[#9B9B9B] mb-3">
-          Last opp eksisterende tegninger, bilder eller annen
-          dokumentasjon. Hjelper oss å gi et mer presist estimat.
-        </p>
-        <FileUploadZone
-          onFilesChange={files => onChange({ attachments: files })}
-          maxFiles={5}
-          maxSizeMB={10}
-        />
-      </div>
-
       {/* Tilleggsinformasjon */}
       <div>
         <label className={ui.label}>
@@ -904,9 +886,8 @@ function EstimatePanel({ estimate }: EstimatePanelProps) {
 // ─── Konfigurator-side ────────────────────────────────────────────────────────
 
 export default function ConfiguratorPage() {
-  const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<WizardData>({ attachments: [] as UploadedFile[] })
+  const [formData, setFormData] = useState<WizardData>({})
   const [estimate, setEstimate] = useState<EstimateResult | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -1007,12 +988,7 @@ export default function ConfiguratorPage() {
       })
       const { error } = await supabase
         .from('inquiries')
-        .insert({
-          ...sanitized,
-          attachments: formData.attachments?.map(f => ({
-            name: f.name, size: f.size, path: f.path
-          })) ?? [],
-        })
+        .insert({ ...sanitized })
 
       if (error) throw error
 
@@ -1063,14 +1039,6 @@ export default function ConfiguratorPage() {
                 Last ned PDF-sammendrag
               </button>
             )}
-            <button
-              onClick={() => navigate('/')}
-              className="px-6 py-2.5 border border-[#E8E8E8] text-[14px] font-medium
-                         text-[#6B6B6B] rounded-md hover:border-[#0C0C0C]
-                         hover:text-[#0C0C0C] transition-colors"
-            >
-              Tilbake til forsiden
-            </button>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2.5 border border-[#E8E8E8] text-[14px] font-medium
