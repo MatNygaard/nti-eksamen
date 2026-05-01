@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { calculateEstimate, getScannerDisplayName } from '@/lib/pricing'
-import type { ScanFormData, EstimateResult, ProjectType, ScanPurpose, Deliverable } from '@/types'
+import { calculateEstimate, getScannerDisplayName } from '../lib/pricing'
 
-const PROJECT_TYPES: { value: ProjectType; label: string }[] = [
+const PROJECT_TYPES = [
   { value: 'office',          label: 'Kontor / Næringsbygg' },
   { value: 'residential',     label: 'Bolig' },
   { value: 'industrial',      label: 'Industri / Produksjon' },
@@ -11,7 +10,7 @@ const PROJECT_TYPES: { value: ProjectType; label: string }[] = [
   { value: 'other',           label: 'Annet' },
 ]
 
-const SCAN_PURPOSES: { value: ScanPurpose; label: string }[] = [
+const SCAN_PURPOSES = [
   { value: 'rehabilitation',  label: 'Rehabilitering / Ombygging' },
   { value: 'documentation',   label: 'As-built dokumentasjon' },
   { value: 'bim_projection',  label: 'Prosjektering og BIM' },
@@ -19,7 +18,7 @@ const SCAN_PURPOSES: { value: ScanPurpose; label: string }[] = [
   { value: 'quality_control', label: 'Kvalitetskontroll' },
 ]
 
-const DELIVERABLES: { value: Deliverable; label: string }[] = [
+const DELIVERABLES = [
   { value: 'point_cloud',  label: 'Punktsky' },
   { value: '3d_model',     label: '3D-modell' },
   { value: '2d_drawings',  label: '2D-tegninger' },
@@ -27,7 +26,7 @@ const DELIVERABLES: { value: Deliverable; label: string }[] = [
   { value: 'virtual_tour', label: 'Virtuell visning' },
 ]
 
-function btnClass(active: boolean) {
+function btnClass(active) {
   return `p-3 rounded-md text-[13px] font-medium transition-colors ${
     active
       ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
@@ -35,7 +34,7 @@ function btnClass(active: boolean) {
   }`
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }) {
   return (
     <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
       <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
@@ -46,7 +45,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function EstimatePanel({ estimate }: { estimate: EstimateResult | null }) {
+function EstimatePanel({ estimate }) {
   if (!estimate) {
     return (
       <Section title="Estimert pris">
@@ -102,17 +101,17 @@ function EstimatePanel({ estimate }: { estimate: EstimateResult | null }) {
 }
 
 export default function ConfiguratorPage() {
-  const [form, setForm] = useState<Partial<ScanFormData>>({})
-  const [estimate, setEstimate] = useState<EstimateResult | null>(null)
+  const [form, setForm] = useState({})
+  const [estimate, setEstimate] = useState(null)
 
-  const update = (data: Partial<ScanFormData>) => {
+  const update = (data) => {
     const next = { ...form, ...data }
     setForm(next)
     if (next.areaM2) setEstimate(calculateEstimate(next))
   }
 
   const selected = form.deliverables ?? []
-  const toggleDeliverable = (d: Deliverable) => {
+  const toggleDeliverable = (d) => {
     const next = selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d]
     update({ deliverables: next })
   }
@@ -190,10 +189,10 @@ export default function ConfiguratorPage() {
 
           <Section title="Presisjonsnivå">
             <div className="grid grid-cols-2 gap-2">
-              {([
-                { value: 'standard' as const, label: 'Standard (±10mm)' },
-                { value: 'high' as const,     label: 'Høy presisjon (±4mm)' },
-              ]).map(({ value, label }) => (
+              {[
+                { value: 'standard', label: 'Standard (±10mm)' },
+                { value: 'high',     label: 'Høy presisjon (±4mm)' },
+              ].map(({ value, label }) => (
                 <button key={value} onClick={() => update({ precisionLevel: value })} className={`${btnClass(form.precisionLevel === value)} text-center`}>
                   {label}
                 </button>
