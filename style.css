@@ -3,8 +3,6 @@ body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f4; c
 .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 30px; }
 main { flex: 1; }
 
-/* ─── Base ────────────────────────────────────────────────────────────────── */
-
 body {
   font-family: sans-serif;
   margin: 0;
@@ -13,8 +11,7 @@ body {
   color: #111;
 }
 
-/* ─── Layout ──────────────────────────────────────────────────────────────── */
-
+/*Layout */
 .container {
   max-width: 1000px;
   margin: 0 auto;
@@ -25,7 +22,7 @@ body {
 main  { flex: 1; }
 aside { width: 300px; position: sticky; top: 20px; }
 
-/* ─── Paneler og seksjoner ────────────────────────────────────────────────── */
+/*Paneler og seksjoner*/
 
 section,
 .panel {
@@ -36,7 +33,7 @@ section,
   margin-bottom: 16px;
 }
 
-/* ─── Typografi ───────────────────────────────────────────────────────────── */
+/*Typografi */
 
 h1 { font-size: 18px; margin: 0 0 20px; }
 
@@ -48,7 +45,7 @@ h2 {
   margin: 0 0 12px;
 }
 
-/* ─── Knapper ─────────────────────────────────────────────────────────────── */
+/*Knapper */
 
 .btn-group {
   display: flex;
@@ -71,8 +68,7 @@ h2 {
   font-weight: 600;
 }
 
-/* ─── Skjema ──────────────────────────────────────────────────────────────── */
-
+/*Skjema*/
 .input-row {
   display: flex;
   gap: 16px;
@@ -95,8 +91,7 @@ input {
   box-sizing: border-box;
 }
 
-/* ─── Estimat-panel ───────────────────────────────────────────────────────── */
-
+/*Estimat panel*/
 .line {
   display: flex;
   justify-content: space-between;
