@@ -1,112 +1,31 @@
-//prislogikk 
+// ─── Priser og satser ────────────────────────────────────────────────────────
 
-const SCAN_DAY_RATE = 17500
-const OFFICE_DAY_RATE = 13250
-const MINIMUM_DAYS = 0.5
-const MINIMUM_TOTAL = 17500
-const ADMIN_MARKUP = 0.10
-const TRAVEL_HOURLY_RATE = 1820
-const OFFICE_WORK_MULTIPLIER = 3.0
-const BIM_RATE_PER_M2 = 7.0
+var SCAN_DAY_RATE = 17500
+var OFFICE_DAY_RATE = 13250
+var MINIMUM_DAYS = 0.5
+var MINIMUM_TOTAL = 17500
+var ADMIN_MARKUP = 0.10
+var TRAVEL_HOURLY_RATE = 1820
+var OFFICE_WORK_MULTIPLIER = 3.0
+var BIM_RATE_PER_M2 = 7.0
 
-const SCAN_HOURS_PER_1000M2 = {
+var SCAN_HOURS_PER_1000M2 = {
   matterport_pro3: { office: 2.0, open: 1.0 },
   blk360_g2:       { office: 2.0, open: 1.0 },
   blk2go:          { office: 1.0, open: 0.5 },
   rtc360:          { office: 2.0, open: 1.0 },
 }
 
-const SCANNER_NAMES = {
+var SCANNER_NAMES = {
   matterport_pro3: 'Matterport Pro3',
   blk2go:          'Leica BLK2GO',
   blk360_g2:       'Leica BLK360 G2',
   rtc360:          'Leica RTC360',
 }
 
-function selectScanner({ precisionLevel, scanPurpose }) {
-  if (precisionLevel === 'high') return 'blk360_g2'
-  if (scanPurpose === 'visualization') return 'matterport_pro3'
-  if (scanPurpose === 'bim_projection') return 'blk2go'
-  return 'blk360_g2'
-}
+// ─── Skjemavalg (state) ─────────────────────────────────────────────────────
 
-function estimateTravelCost(postalCode) {
-  if (!postalCode) return 0
-  const code = parseInt(postalCode, 10)
-  const ranges = [
-    [1300, 1399, 0],
-    [900,  1299, 0.5],
-    [200,  899,  1.5],
-    [4000, 5999, 4],
-    [7000, 7999, 6],
-    [8000, 9999, 8],
-  ]
-  const match = ranges.find(([min, max]) => code >= min && code <= max)
-  return TRAVEL_HOURLY_RATE * (match ? match[2] : 2)
-}
-
-function calculateEstimate(data) {
-  const area = data.areaM2 || 0
-  const scanner = selectScanner(data)
-  const isOpen = data.projectType === 'industrial' || data.projectType === 'outdoor'
-  const hoursPerK = SCAN_HOURS_PER_1000M2[scanner][isOpen ? 'open' : 'office']
-  const scanHours = (area / 1000) * hoursPerK
-
-  const roundHalf = h => Math.max(MINIMUM_DAYS, Math.ceil((h / 8) * 2) / 2)
-  const scanDays = roundHalf(scanHours)
-  const officeDays = roundHalf(scanHours * OFFICE_WORK_MULTIPLIER)
-
-  const scanCost = scanDays * SCAN_DAY_RATE
-  const officeCost = officeDays * OFFICE_DAY_RATE
-  const needsBim = (data.deliverables || []).some(d => d === 'ifc_bim' || d === '2d_drawings')
-  const bimCost = needsBim ? area * BIM_RATE_PER_M2 : 0
-  const travelCost = estimateTravelCost(data.postalCode || '')
-  const subtotal = scanCost + officeCost + bimCost + travelCost
-  const adminMarkup = subtotal * ADMIN_MARKUP
-  const baseTotal = subtotal + adminMarkup
-
-  return {
-    scanner, scanDays, officeDays,
-    scanCost, officeCost, bimCost, travelCost, adminMarkup,
-    totalMin: Math.max(MINIMUM_TOTAL, Math.round(baseTotal * 0.90)),
-    totalMax: Math.round(baseTotal * 1.15),
-  }
-}
-
-// ─── Valg-data ──────────────────────────────────────────────────────────────
-
-const OPTIONS = {
-  projectType: [
-    { value: 'office',          label: 'Kontor / Næringsbygg' },
-    { value: 'residential',     label: 'Bolig' },
-    { value: 'industrial',      label: 'Industri / Produksjon' },
-    { value: 'technical_rooms', label: 'Tekniske rom' },
-    { value: 'outdoor',         label: 'Uteområde' },
-    { value: 'other',           label: 'Annet' },
-  ],
-  scanPurpose: [
-    { value: 'rehabilitation',  label: 'Rehabilitering / Ombygging' },
-    { value: 'documentation',   label: 'As-built dokumentasjon' },
-    { value: 'bim_projection',  label: 'Prosjektering og BIM' },
-    { value: 'visualization',   label: 'Visualisering / Digital tvilling' },
-    { value: 'quality_control', label: 'Kvalitetskontroll' },
-  ],
-  deliverables: [
-    { value: 'point_cloud',  label: 'Punktsky' },
-    { value: '3d_model',     label: '3D-modell' },
-    { value: '2d_drawings',  label: '2D-tegninger' },
-    { value: 'ifc_bim',      label: 'IFC/Revit BIM' },
-    { value: 'virtual_tour', label: 'Virtuell visning' },
-  ],
-  precisionLevel: [
-    { value: 'standard', label: 'Standard (±10mm)' },
-    { value: 'high',     label: 'Høy presisjon (±4mm)' },
-  ],
-}
-
-// ─── State ──────────────────────────────────────────────────────────────────
-
-const form = {
+var form = {
   projectType: null,
   scanPurpose: null,
   areaM2: 0,
@@ -115,84 +34,202 @@ const form = {
   precisionLevel: null,
 }
 
-// ─── Bygg knapper ───────────────────────────────────────────────────────────
+// ─── Hjelpefunksjoner ───────────────────────────────────────────────────────
 
-function buildButtons(containerId, field, multi = false) {
-  const container = document.getElementById(containerId)
-  OPTIONS[field].forEach(({ value, label }) => {
-    const btn = document.createElement('button')
-    btn.textContent = label
-    btn.className = 'btn'
-    btn.dataset.value = value
-    btn.addEventListener('click', () => {
-      if (multi) {
-        const i = form[field].indexOf(value)
-        i === -1 ? form[field].push(value) : form[field].splice(i, 1)
-      } else {
-        form[field] = value
-      }
-      container.querySelectorAll('.btn').forEach(b => {
-        const active = multi
-          ? form[field].includes(b.dataset.value)
-          : b.dataset.value === form[field]
-        b.classList.toggle('active', active)
-      })
-      updateEstimate()
-    })
-    container.appendChild(btn)
-  })
+function formatKr(tall) {
+  return tall.toLocaleString('nb-NO') + ' kr'
 }
 
-// ─── Oppdater estimat-panel ─────────────────────────────────────────────────
+function roundToHalfDay(hours) {
+  var days = Math.ceil((hours / 8) * 2) / 2
+  if (days < MINIMUM_DAYS) {
+    return MINIMUM_DAYS
+  }
+  return days
+}
 
-const fmt = n => n.toLocaleString('nb-NO')
+// ─── Velg skanner basert på brukerens valg ───────────────────────────────────
+
+function selectScanner() {
+  if (form.precisionLevel === 'high') return 'blk360_g2'
+  if (form.scanPurpose === 'visualization') return 'matterport_pro3'
+  if (form.scanPurpose === 'bim_projection') return 'blk2go'
+  return 'blk360_g2'
+}
+
+// ─── Beregn reisekostnad ut fra postnummer ───────────────────────────────────
+
+function estimateTravelCost() {
+  if (!form.postalCode) return 0
+
+  var code = parseInt(form.postalCode, 10)
+
+  if (code >= 1300 && code <= 1399) return 0
+  if (code >= 900  && code <= 1299) return TRAVEL_HOURLY_RATE * 0.5
+  if (code >= 200  && code <= 899)  return TRAVEL_HOURLY_RATE * 1.5
+  if (code >= 4000 && code <= 5999) return TRAVEL_HOURLY_RATE * 4
+  if (code >= 7000 && code <= 7999) return TRAVEL_HOURLY_RATE * 6
+  if (code >= 8000 && code <= 9999) return TRAVEL_HOURLY_RATE * 8
+
+  return TRAVEL_HOURLY_RATE * 2
+}
+
+// ─── Hovedberegning av estimat ───────────────────────────────────────────────
+
+function calculateEstimate() {
+  var area = form.areaM2
+  var scanner = selectScanner()
+
+  // Finn skannehastighet basert på type bygg
+  var isOpen = (form.projectType === 'industrial' || form.projectType === 'outdoor')
+  var type = isOpen ? 'open' : 'office'
+  var scanHours = (area / 1000) * SCAN_HOURS_PER_1000M2[scanner][type]
+
+  // Beregn antall dager
+  var scanDays = roundToHalfDay(scanHours)
+  var officeDays = roundToHalfDay(scanHours * OFFICE_WORK_MULTIPLIER)
+
+  // Beregn kostnader
+  var scanCost = scanDays * SCAN_DAY_RATE
+  var officeCost = officeDays * OFFICE_DAY_RATE
+
+  // BIM-kostnad hvis relevant
+  var needsBim = form.deliverables.indexOf('ifc_bim') !== -1
+                 || form.deliverables.indexOf('2d_drawings') !== -1
+  var bimCost = needsBim ? area * BIM_RATE_PER_M2 : 0
+
+  // Reise og administrasjon
+  var travelCost = estimateTravelCost()
+  var subtotal = scanCost + officeCost + bimCost + travelCost
+  var adminMarkup = subtotal * ADMIN_MARKUP
+
+  // Totalspenn (±)
+  var baseTotal = subtotal + adminMarkup
+  var totalMin = Math.max(MINIMUM_TOTAL, Math.round(baseTotal * 0.90))
+  var totalMax = Math.round(baseTotal * 1.15)
+
+  return {
+    scanner: scanner,
+    scanDays: scanDays,
+    officeDays: officeDays,
+    scanCost: scanCost,
+    officeCost: officeCost,
+    bimCost: bimCost,
+    travelCost: travelCost,
+    adminMarkup: adminMarkup,
+    totalMin: totalMin,
+    totalMax: totalMax,
+  }
+}
+
+// ─── Oppdater estimat-panelet ────────────────────────────────────────────────
+
+function showLine(id, value) {
+  var line = document.getElementById(id)
+  if (value > 0) {
+    line.style.display = 'flex'
+    line.querySelector('.value').textContent = formatKr(value)
+  } else {
+    line.style.display = 'none'
+  }
+}
 
 function updateEstimate() {
-  const panel = document.getElementById('estimatePanel')
+  var emptyHint = document.getElementById('emptyHint')
+  var details = document.getElementById('estimateDetails')
 
   if (!form.areaM2) {
-    panel.innerHTML = `<h2>Estimert pris</h2><p class="hint">Fyll inn areal for å se estimat.</p>`
+    emptyHint.style.display = 'block'
+    details.style.display = 'none'
     return
   }
 
-  const est = calculateEstimate(form)
+  emptyHint.style.display = 'none'
+  details.style.display = 'block'
 
-  const lines = [
-    ['Skanning',        est.scanCost],
-    ['Etterarbeid',     est.officeCost],
-    ['BIM-modellering', est.bimCost],
-    ['Reise',           est.travelCost],
-    ['Administrasjon',  est.adminMarkup],
-  ].filter(([, v]) => v > 0)
-   .map(([label, v]) => `<div class="line"><span>${label}</span><span class="value">${fmt(v)} kr</span></div>`)
-   .join('')
+  var est = calculateEstimate()
 
-  panel.innerHTML = `
-    <h2>Estimert pris</h2>
-    ${lines}
-    <div class="total">
-      <span>Totalt</span>
-      <span class="value">${fmt(est.totalMin)} – ${fmt(est.totalMax)} kr</span>
-    </div>
-    <span class="badge">${SCANNER_NAMES[est.scanner]}</span>
-    <span style="font-size:12px;color:#999">${est.scanDays}d felt / ${est.officeDays}d kontor</span>
-    <p class="hint">Grovestimat. Endelig pris avklares etter befaring.</p>
-  `
+  // Oppdater hver kostnadslinje
+  showLine('lineScan', est.scanCost)
+  showLine('lineOffice', est.officeCost)
+  showLine('lineBim', est.bimCost)
+  showLine('lineTravel', est.travelCost)
+  showLine('lineAdmin', est.adminMarkup)
+
+  // Total
+  document.getElementById('valTotal').textContent =
+    formatKr(est.totalMin) + ' – ' + formatKr(est.totalMax)
+
+  // Skanner og dager
+  document.getElementById('scannerBadge').textContent = SCANNER_NAMES[est.scanner]
+  document.getElementById('daysInfo').textContent =
+    est.scanDays + 'd felt / ' + est.officeDays + 'd kontor'
 }
 
-// ─── Init ───────────────────────────────────────────────────────────────────
+// ─── Knappehåndtering ────────────────────────────────────────────────────────
 
-buildButtons('projectType', 'projectType')
-buildButtons('scanPurpose', 'scanPurpose')
-buildButtons('deliverables', 'deliverables', true)
-buildButtons('precisionLevel', 'precisionLevel')
+function setupSingleSelect(groupId, field) {
+  var buttons = document.querySelectorAll('#' + groupId + ' .btn')
 
-document.getElementById('areaM2').addEventListener('input', e => {
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function () {
+      form[field] = this.dataset.value
+
+      // Oppdater aktiv-klasse på alle knapper i gruppen
+      var siblings = this.parentElement.querySelectorAll('.btn')
+      for (var j = 0; j < siblings.length; j++) {
+        if (siblings[j].dataset.value === form[field]) {
+          siblings[j].classList.add('active')
+        } else {
+          siblings[j].classList.remove('active')
+        }
+      }
+
+      updateEstimate()
+    })
+  }
+}
+
+function setupMultiSelect(groupId, field) {
+  var buttons = document.querySelectorAll('#' + groupId + ' .btn')
+
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function () {
+      var value = this.dataset.value
+      var index = form[field].indexOf(value)
+
+      // Legg til eller fjern fra listen
+      if (index === -1) {
+        form[field].push(value)
+      } else {
+        form[field].splice(index, 1)
+      }
+
+      // Oppdater aktiv-klasse
+      if (form[field].indexOf(value) !== -1) {
+        this.classList.add('active')
+      } else {
+        this.classList.remove('active')
+      }
+
+      updateEstimate()
+    })
+  }
+}
+
+// ─── Start ───────────────────────────────────────────────────────────────────
+
+setupSingleSelect('projectType', 'projectType')
+setupSingleSelect('scanPurpose', 'scanPurpose')
+setupMultiSelect('deliverables', 'deliverables')
+setupSingleSelect('precisionLevel', 'precisionLevel')
+
+document.getElementById('areaM2').addEventListener('input', function (e) {
   form.areaM2 = e.target.value ? Number(e.target.value) : 0
   updateEstimate()
 })
 
-document.getElementById('postalCode').addEventListener('input', e => {
+document.getElementById('postalCode').addEventListener('input', function (e) {
   e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4)
   form.postalCode = e.target.value
   updateEstimate()

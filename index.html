@@ -14,12 +14,25 @@
 
       <section>
         <h2>Prosjekttype</h2>
-        <div id="projectType" class="btn-group"></div>
+        <div id="projectType" class="btn-group">
+          <button class="btn" data-value="office">Kontor / Næringsbygg</button>
+          <button class="btn" data-value="residential">Bolig</button>
+          <button class="btn" data-value="industrial">Industri / Produksjon</button>
+          <button class="btn" data-value="technical_rooms">Tekniske rom</button>
+          <button class="btn" data-value="outdoor">Uteområde</button>
+          <button class="btn" data-value="other">Annet</button>
+        </div>
       </section>
 
       <section>
         <h2>Formål med skanningen</h2>
-        <div id="scanPurpose" class="btn-group"></div>
+        <div id="scanPurpose" class="btn-group">
+          <button class="btn" data-value="rehabilitation">Rehabilitering / Ombygging</button>
+          <button class="btn" data-value="documentation">As-built dokumentasjon</button>
+          <button class="btn" data-value="bim_projection">Prosjektering og BIM</button>
+          <button class="btn" data-value="visualization">Visualisering / Digital tvilling</button>
+          <button class="btn" data-value="quality_control">Kvalitetskontroll</button>
+        </div>
       </section>
 
       <section>
@@ -38,19 +51,61 @@
 
       <section>
         <h2>Leveranser</h2>
-        <div id="deliverables" class="btn-group"></div>
+        <div id="deliverables" class="btn-group">
+          <button class="btn" data-value="point_cloud">Punktsky</button>
+          <button class="btn" data-value="3d_model">3D-modell</button>
+          <button class="btn" data-value="2d_drawings">2D-tegninger</button>
+          <button class="btn" data-value="ifc_bim">IFC/Revit BIM</button>
+          <button class="btn" data-value="virtual_tour">Virtuell visning</button>
+        </div>
       </section>
 
       <section>
         <h2>Presisjonsnivå</h2>
-        <div id="precisionLevel" class="btn-group"></div>
+        <div id="precisionLevel" class="btn-group">
+          <button class="btn" data-value="standard">Standard (±10mm)</button>
+          <button class="btn" data-value="high">Høy presisjon (±4mm)</button>
+        </div>
       </section>
     </main>
 
     <aside>
       <div id="estimatePanel" class="panel">
         <h2>Estimert pris</h2>
-        <p class="hint">Fyll inn areal for å se estimat.</p>
+
+        <p id="emptyHint" class="hint">Fyll inn areal for å se estimat.</p>
+
+        <div id="estimateDetails" style="display: none;">
+          <div id="lineScan" class="line">
+            <span>Skanning</span>
+            <span class="value" id="valScan"></span>
+          </div>
+          <div id="lineOffice" class="line">
+            <span>Etterarbeid</span>
+            <span class="value" id="valOffice"></span>
+          </div>
+          <div id="lineBim" class="line">
+            <span>BIM-modellering</span>
+            <span class="value" id="valBim"></span>
+          </div>
+          <div id="lineTravel" class="line">
+            <span>Reise</span>
+            <span class="value" id="valTravel"></span>
+          </div>
+          <div id="lineAdmin" class="line">
+            <span>Administrasjon</span>
+            <span class="value" id="valAdmin"></span>
+          </div>
+
+          <div class="total">
+            <span>Totalt</span>
+            <span class="value" id="valTotal"></span>
+          </div>
+
+          <span class="badge" id="scannerBadge"></span>
+          <span id="daysInfo" style="font-size: 12px; color: #999;"></span>
+          <p class="hint">Grovestimat. Endelig pris avklares etter befaring.</p>
+        </div>
       </div>
     </aside>
   </div>
