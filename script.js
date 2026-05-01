@@ -1,4 +1,4 @@
-// ─── Prislogikk ─────────────────────────────────────────────────────────────
+//prislogikk 
 
 var SCAN_DAY_RATE = 17500
 var OFFICE_DAY_RATE = 13250
