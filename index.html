@@ -4,89 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NTI — Bestill 3D-skanning</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #111827;
-      -webkit-font-smoothing: antialiased;
-      background-color: #F5F5F4;
-    }
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f4; color: #111; }
+    .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 30px; }
+    main { flex: 1; }
+    aside { width: 300px; position: sticky; top: 20px; }
+    section, .panel { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+    h1 { font-size: 18px; margin: 0 0 20px; }
+    h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin: 0 0 12px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn { padding: 10px 16px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 13px; cursor: pointer; }
+    .btn.active { border: 2px solid #111; background: #fafafa; font-weight: 600; }
+    .input-row { display: flex; gap: 16px; }
+    .input-row > div { flex: 1; }
+    label { display: block; font-size: 13px; margin-bottom: 4px; }
+    input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    .line { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+    .line .value { color: #E63312; font-weight: 500; }
+    .total { border-top: 1px solid #ddd; padding-top: 12px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .total .value { font-size: 18px; font-weight: 700; color: #E63312; }
+    .badge { background: #f5f5f4; border: 1px solid #ddd; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #666; display: inline-block; margin-top: 10px; }
+    .hint { font-size: 12px; color: #999; text-align: center; margin-top: 12px; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="bg-white border-b border-[#E8E8E8]">
-    <div class="max-w-[1100px] mx-auto px-8 py-4 flex items-center gap-2">
-      <span class="text-[16px] font-extrabold text-[#0C0C0C]">nti</span>
-      <span class="w-[5px] h-[5px] bg-[#E63312] rounded-sm inline-block"></span>
-      <span class="text-[#E8E8E8] mx-1">|</span>
-      <span class="text-[14px] font-medium text-[#6B6B6B]">Bestill 3D-skanning</span>
-    </div>
-  </div>
+  <div class="container">
+    <main>
+      <h1>NTI — Bestill 3D-skanning</h1>
 
-  <!-- Innhold -->
-  <div class="max-w-[1100px] mx-auto px-8 py-10 flex gap-8 items-start">
-
-    <!-- Venstre: Input -->
-    <main class="flex-1 space-y-6">
-
-      <!-- Prosjekttype -->
-      <section class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">Prosjekttype</p>
-        <div id="projectType" class="grid grid-cols-3 gap-2"></div>
+      <section>
+        <h2>Prosjekttype</h2>
+        <div id="projectType" class="btn-group"></div>
       </section>
 
-      <!-- Formål -->
-      <section class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">Formål med skanningen</p>
-        <div id="scanPurpose" class="grid grid-cols-2 gap-2"></div>
+      <section>
+        <h2>Formål med skanningen</h2>
+        <div id="scanPurpose" class="btn-group"></div>
       </section>
 
-      <!-- Omfang og lokasjon -->
-      <section class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">Omfang og lokasjon</p>
-        <div class="grid grid-cols-2 gap-4">
+      <section>
+        <h2>Omfang og lokasjon</h2>
+        <div class="input-row">
           <div>
-            <label class="block text-[13px] font-medium text-[#3D3D3D] mb-1">Areal (m²)</label>
-            <input id="areaM2" type="number" min="1" placeholder="F.eks. 2500"
-              class="w-full border border-[#E8E8E8] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0C0C0C] focus:ring-1 focus:ring-[#0C0C0C]" />
+            <label>Areal (m²)</label>
+            <input id="areaM2" type="number" min="1" placeholder="F.eks. 2500" />
           </div>
           <div>
-            <label class="block text-[13px] font-medium text-[#3D3D3D] mb-1">Postnummer</label>
-            <input id="postalCode" type="text" maxlength="4" placeholder="0000"
-              class="w-full border border-[#E8E8E8] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#0C0C0C] focus:ring-1 focus:ring-[#0C0C0C]" />
+            <label>Postnummer</label>
+            <input id="postalCode" type="text" maxlength="4" placeholder="0000" />
           </div>
         </div>
       </section>
 
-      <!-- Leveranser -->
-      <section class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">Leveranser</p>
-        <div id="deliverables" class="flex flex-wrap gap-2"></div>
+      <section>
+        <h2>Leveranser</h2>
+        <div id="deliverables" class="btn-group"></div>
       </section>
 
-      <!-- Presisjonsnivå -->
-      <section class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">Presisjonsnivå</p>
-        <div id="precisionLevel" class="grid grid-cols-2 gap-2"></div>
+      <section>
+        <h2>Presisjonsnivå</h2>
+        <div id="precisionLevel" class="btn-group"></div>
       </section>
-
     </main>
 
-    <!-- Høyre: Estimat -->
-    <aside class="w-80 shrink-0 sticky top-20">
-      <div id="estimatePanel" class="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-4">Estimert pris</p>
-        <p class="text-[14px] text-[#9B9B9B] text-center py-6">Fyll inn areal for å se estimat.</p>
+    <aside>
+      <div id="estimatePanel" class="panel">
+        <h2>Estimert pris</h2>
+        <p class="hint">Fyll inn areal for å se estimat.</p>
       </div>
     </aside>
-
   </div>
 
   <script src="script.js"></script>

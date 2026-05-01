@@ -1,22 +1,22 @@
 // ─── Prislogikk ─────────────────────────────────────────────────────────────
 
-const SCAN_DAY_RATE = 17_500
-const OFFICE_DAY_RATE = 13_250
-const MINIMUM_DAYS = 0.5
-const MINIMUM_TOTAL = 17_500
-const ADMIN_MARKUP = 0.10
-const TRAVEL_HOURLY_RATE = 1_820
-const OFFICE_WORK_MULTIPLIER = 3.0
-const BIM_RATE_PER_M2 = 7.0
+var SCAN_DAY_RATE = 17500
+var OFFICE_DAY_RATE = 13250
+var MINIMUM_DAYS = 0.5
+var MINIMUM_TOTAL = 17500
+var ADMIN_MARKUP = 0.10
+var TRAVEL_HOURLY_RATE = 1820
+var OFFICE_WORK_MULTIPLIER = 3.0
+var BIM_RATE_PER_M2 = 7.0
 
-const SCAN_HOURS_PER_1000M2 = {
+var SCAN_HOURS_PER_1000M2 = {
   matterport_pro3: { office: 2.0, open: 1.0 },
   blk360_g2:       { office: 2.0, open: 1.0 },
   blk2go:          { office: 1.0, open: 0.5 },
   rtc360:          { office: 2.0, open: 1.0 },
 }
 
-const SCANNER_NAMES = {
+var SCANNER_NAMES = {
   matterport_pro3: 'Matterport Pro3',
   blk2go:          'Leica BLK2GO',
   blk360_g2:       'Leica BLK360 G2',
@@ -47,30 +47,24 @@ function calculateEstimate(data) {
   var projectType = data.projectType || 'office'
   var scannerType = selectScanner(data)
 
-  // Beregn skannetimer
-  var isOpen = ['industrial', 'outdoor'].includes(projectType)
+  var isOpen = projectType === 'industrial' || projectType === 'outdoor'
   var hoursPerK = SCAN_HOURS_PER_1000M2[scannerType][isOpen ? 'open' : 'office']
   var scanHours = (areaM2 / 1000) * hoursPerK
 
-  // Dager (rundet opp til nærmeste halve dag)
   var scanDays = Math.max(MINIMUM_DAYS, Math.ceil((scanHours / 8) * 2) / 2)
   var officeDays = Math.max(MINIMUM_DAYS, Math.ceil((scanHours * OFFICE_WORK_MULTIPLIER / 8) * 2) / 2)
 
-  // Kostnader
   var scanCost = scanDays * SCAN_DAY_RATE
   var officeCost = officeDays * OFFICE_DAY_RATE
 
-  // BIM-kostnad
   var deliverables = data.deliverables || []
-  var needsBim = deliverables.includes('ifc_bim') || deliverables.includes('2d_drawings')
+  var needsBim = deliverables.indexOf('ifc_bim') !== -1 || deliverables.indexOf('2d_drawings') !== -1
   var bimCost = needsBim ? areaM2 * BIM_RATE_PER_M2 : 0
 
-  // Reise og admin
   var travelCost = estimateTravelCost(data.postalCode || '')
   var subtotal = scanCost + officeCost + bimCost + travelCost
   var adminMarkup = subtotal * ADMIN_MARKUP
 
-  // Totalområde (±15 %)
   var baseTotal = subtotal + adminMarkup
   var totalMin = Math.max(MINIMUM_TOTAL, Math.round(baseTotal * 0.90))
   var totalMax = Math.round(baseTotal * 1.15)
@@ -85,7 +79,7 @@ function calculateEstimate(data) {
     travelCost: travelCost,
     adminMarkup: adminMarkup,
     totalMin: totalMin,
-    totalMax: totalMax,
+    totalMax: totalMax
   }
 }
 
@@ -97,7 +91,7 @@ var PROJECT_TYPES = [
   { value: 'industrial',      label: 'Industri / Produksjon' },
   { value: 'technical_rooms', label: 'Tekniske rom' },
   { value: 'outdoor',         label: 'Uteområde' },
-  { value: 'other',           label: 'Annet' },
+  { value: 'other',           label: 'Annet' }
 ]
 
 var SCAN_PURPOSES = [
@@ -105,7 +99,7 @@ var SCAN_PURPOSES = [
   { value: 'documentation',   label: 'As-built dokumentasjon' },
   { value: 'bim_projection',  label: 'Prosjektering og BIM' },
   { value: 'visualization',   label: 'Visualisering / Digital tvilling' },
-  { value: 'quality_control', label: 'Kvalitetskontroll' },
+  { value: 'quality_control', label: 'Kvalitetskontroll' }
 ]
 
 var DELIVERABLES = [
@@ -113,12 +107,12 @@ var DELIVERABLES = [
   { value: '3d_model',     label: '3D-modell' },
   { value: '2d_drawings',  label: '2D-tegninger' },
   { value: 'ifc_bim',      label: 'IFC/Revit BIM' },
-  { value: 'virtual_tour', label: 'Virtuell visning' },
+  { value: 'virtual_tour', label: 'Virtuell visning' }
 ]
 
 var PRECISION_LEVELS = [
   { value: 'standard', label: 'Standard (±10mm)' },
-  { value: 'high',     label: 'Høy presisjon (±4mm)' },
+  { value: 'high',     label: 'Høy presisjon (±4mm)' }
 ]
 
 // ─── State ──────────────────────────────────────────────────────────────────
@@ -129,60 +123,58 @@ var form = {
   areaM2: 0,
   postalCode: '',
   deliverables: [],
-  precisionLevel: null,
+  precisionLevel: null
 }
 
-// ─── Knapp-styling ──────────────────────────────────────────────────────────
-
-var BTN_BASE = 'p-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer'
-var BTN_ACTIVE = BTN_BASE + ' border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
-var BTN_INACTIVE = BTN_BASE + ' border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
-
-// ─── Bygg knapper ──────────────────────────────────────────────────────────
+// ─── Bygg knapper ───────────────────────────────────────────────────────────
 
 function buildButtons(containerId, options, field) {
   var container = document.getElementById(containerId)
-  options.forEach(function (opt) {
+  for (var i = 0; i < options.length; i++) {
     var btn = document.createElement('button')
-    btn.textContent = opt.label
-    btn.className = BTN_INACTIVE
-    btn.setAttribute('data-value', opt.value)
-    btn.addEventListener('click', function () {
-      form[field] = opt.value
-      // Oppdater aktiv-styling
-      container.querySelectorAll('button').forEach(function (b) {
-        b.className = b.getAttribute('data-value') === form[field] ? BTN_ACTIVE : BTN_INACTIVE
-      })
-      updateEstimate()
-    })
+    btn.textContent = options[i].label
+    btn.className = 'btn'
+    btn.setAttribute('data-value', options[i].value)
+    btn.addEventListener('click', (function (opt) {
+      return function () {
+        form[field] = opt.value
+        var buttons = container.querySelectorAll('button')
+        for (var j = 0; j < buttons.length; j++) {
+          buttons[j].className = buttons[j].getAttribute('data-value') === form[field] ? 'btn active' : 'btn'
+        }
+        updateEstimate()
+      }
+    })(options[i]))
     container.appendChild(btn)
-  })
+  }
 }
 
 function buildToggleButtons(containerId, options, field) {
   var container = document.getElementById(containerId)
-  options.forEach(function (opt) {
+  for (var i = 0; i < options.length; i++) {
     var btn = document.createElement('button')
-    btn.textContent = opt.label
-    btn.className = BTN_INACTIVE + ' px-4 py-2'
-    btn.setAttribute('data-value', opt.value)
-    btn.addEventListener('click', function () {
-      var list = form[field]
-      var index = list.indexOf(opt.value)
-      if (index === -1) {
-        list.push(opt.value)
-      } else {
-        list.splice(index, 1)
+    btn.textContent = options[i].label
+    btn.className = 'btn'
+    btn.setAttribute('data-value', options[i].value)
+    btn.addEventListener('click', (function (opt) {
+      return function () {
+        var list = form[field]
+        var index = list.indexOf(opt.value)
+        if (index === -1) {
+          list.push(opt.value)
+        } else {
+          list.splice(index, 1)
+        }
+        var buttons = container.querySelectorAll('button')
+        for (var j = 0; j < buttons.length; j++) {
+          var isActive = list.indexOf(buttons[j].getAttribute('data-value')) !== -1
+          buttons[j].className = isActive ? 'btn active' : 'btn'
+        }
+        updateEstimate()
       }
-      // Oppdater aktiv-styling
-      container.querySelectorAll('button').forEach(function (b) {
-        var isActive = list.includes(b.getAttribute('data-value'))
-        b.className = (isActive ? BTN_ACTIVE : BTN_INACTIVE) + ' px-4 py-2'
-      })
-      updateEstimate()
-    })
+    })(options[i]))
     container.appendChild(btn)
-  })
+  }
 }
 
 // ─── Oppdater estimat-panel ─────────────────────────────────────────────────
@@ -196,49 +188,41 @@ function updateEstimate() {
 
   if (!form.areaM2) {
     panel.innerHTML =
-      '<p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-4">Estimert pris</p>' +
-      '<p class="text-[14px] text-[#9B9B9B] text-center py-6">Fyll inn areal for å se estimat.</p>'
+      '<h2>Estimert pris</h2>' +
+      '<p class="hint">Fyll inn areal for å se estimat.</p>'
     return
   }
 
   var est = calculateEstimate(form)
 
-  // Bygg linjeposter
   var lines = [
     { label: 'Skanning',        value: est.scanCost },
     { label: 'Etterarbeid',     value: est.officeCost },
     { label: 'BIM-modellering', value: est.bimCost },
     { label: 'Reise',           value: est.travelCost },
-    { label: 'Administrasjon',  value: est.adminMarkup },
+    { label: 'Administrasjon',  value: est.adminMarkup }
   ]
 
-  var linesHtml = ''
-  lines.forEach(function (line) {
-    if (line.value > 0) {
-      linesHtml +=
-        '<div class="flex justify-between text-[14px]">' +
-          '<span class="text-[#6B6B6B]">' + line.label + '</span>' +
-          '<span class="font-medium text-[#E63312] font-mono tabular-nums">' + formatNumber(line.value) + ' kr</span>' +
-        '</div>'
+  var html = '<h2>Estimert pris</h2>'
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].value > 0) {
+      html += '<div class="line">' +
+        '<span>' + lines[i].label + '</span>' +
+        '<span class="value">' + formatNumber(lines[i].value) + ' kr</span>' +
+      '</div>'
     }
-  })
+  }
 
-  panel.innerHTML =
-    '<p class="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-4">Estimert pris</p>' +
-    '<div class="space-y-2 mb-4">' + linesHtml + '</div>' +
-    '<div class="border-t border-[#E8E8E8] pt-4 flex justify-between items-center">' +
-      '<span class="text-[14px] font-semibold text-[#0C0C0C]">Totalt</span>' +
-      '<span class="text-[18px] font-bold text-[#E63312] font-mono tabular-nums">' +
-        formatNumber(est.totalMin) + ' – ' + formatNumber(est.totalMax) + ' kr' +
-      '</span>' +
-    '</div>' +
-    '<div class="mt-3 flex items-center gap-2">' +
-      '<span class="bg-[#F5F5F4] border border-[#E8E8E8] text-[#6B6B6B] text-[12px] font-medium px-2.5 py-1 rounded">' +
-        SCANNER_NAMES[est.scannerType] +
-      '</span>' +
-      '<span class="text-[12px] text-[#9B9B9B]">' + est.scanDays + 'd felt / ' + est.officeDays + 'd kontor</span>' +
-    '</div>' +
-    '<p class="text-[12px] text-[#9B9B9B] mt-4 text-center">Grovestimat. Endelig pris avklares etter befaring.</p>'
+  html += '<div class="total">' +
+    '<span>Totalt</span>' +
+    '<span class="value">' + formatNumber(est.totalMin) + ' – ' + formatNumber(est.totalMax) + ' kr</span>' +
+  '</div>'
+
+  html += '<span class="badge">' + SCANNER_NAMES[est.scannerType] + '</span> '
+  html += '<span style="font-size:12px;color:#999">' + est.scanDays + 'd felt / ' + est.officeDays + 'd kontor</span>'
+  html += '<p class="hint">Grovestimat. Endelig pris avklares etter befaring.</p>'
+
+  panel.innerHTML = html
 }
 
 // ─── Init ───────────────────────────────────────────────────────────────────
@@ -248,7 +232,6 @@ buildButtons('scanPurpose', SCAN_PURPOSES, 'scanPurpose')
 buildToggleButtons('deliverables', DELIVERABLES, 'deliverables')
 buildButtons('precisionLevel', PRECISION_LEVELS, 'precisionLevel')
 
-// Input-felter
 document.getElementById('areaM2').addEventListener('input', function (e) {
   form.areaM2 = e.target.value ? Number(e.target.value) : 0
   updateEstimate()
