@@ -1,22 +1,22 @@
 // ─── Priser og satser ────────────────────────────────────────────────────────
 
-var SCAN_DAY_RATE = 17500
-var OFFICE_DAY_RATE = 13250
-var MINIMUM_DAYS = 0.5
-var MINIMUM_TOTAL = 17500
-var ADMIN_MARKUP = 0.10
-var TRAVEL_HOURLY_RATE = 1820
-var OFFICE_WORK_MULTIPLIER = 3.0
-var BIM_RATE_PER_M2 = 7.0
+const SCAN_DAY_RATE = 17500
+const OFFICE_DAY_RATE = 13250
+const MINIMUM_DAYS = 0.5
+const MINIMUM_TOTAL = 17500
+const ADMIN_MARKUP = 0.10
+const TRAVEL_HOURLY_RATE = 1820
+const OFFICE_WORK_MULTIPLIER = 3.0
+const BIM_RATE_PER_M2 = 7.0
 
-var SCAN_HOURS_PER_1000M2 = {
+const SCAN_HOURS_PER_1000M2 = {
   matterport_pro3: { office: 2.0, open: 1.0 },
   blk360_g2:       { office: 2.0, open: 1.0 },
   blk2go:          { office: 1.0, open: 0.5 },
   rtc360:          { office: 2.0, open: 1.0 },
 }
 
-var SCANNER_NAMES = {
+const SCANNER_NAMES = {
   matterport_pro3: 'Matterport Pro3',
   blk2go:          'Leica BLK2GO',
   blk360_g2:       'Leica BLK360 G2',
@@ -25,7 +25,7 @@ var SCANNER_NAMES = {
 
 // ─── Skjemavalg (state) ─────────────────────────────────────────────────────
 
-var form = {
+const form = {
   projectType: null,
   scanPurpose: null,
   areaM2: 0,
@@ -41,7 +41,7 @@ function formatKr(tall) {
 }
 
 function roundToHalfDay(hours) {
-  var days = Math.ceil((hours / 8) * 2) / 2
+  const days = Math.ceil((hours / 8) * 2) / 2
   if (days < MINIMUM_DAYS) {
     return MINIMUM_DAYS
   }
@@ -62,7 +62,7 @@ function selectScanner() {
 function estimateTravelCost() {
   if (!form.postalCode) return 0
 
-  var code = parseInt(form.postalCode, 10)
+  const code = parseInt(form.postalCode, 10)
 
   if (code >= 1300 && code <= 1399) return 0
   if (code >= 900  && code <= 1299) return TRAVEL_HOURLY_RATE * 0.5
@@ -77,36 +77,36 @@ function estimateTravelCost() {
 // ─── Hovedberegning av estimat ───────────────────────────────────────────────
 
 function calculateEstimate() {
-  var area = form.areaM2
-  var scanner = selectScanner()
+  const area = form.areaM2
+  const scanner = selectScanner()
 
   // Finn skannehastighet basert på type bygg
-  var isOpen = (form.projectType === 'industrial' || form.projectType === 'outdoor')
-  var type = isOpen ? 'open' : 'office'
-  var scanHours = (area / 1000) * SCAN_HOURS_PER_1000M2[scanner][type]
+  const isOpen = (form.projectType === 'industrial' || form.projectType === 'outdoor')
+  const type = isOpen ? 'open' : 'office'
+  const scanHours = (area / 1000) * SCAN_HOURS_PER_1000M2[scanner][type]
 
   // Beregn antall dager
-  var scanDays = roundToHalfDay(scanHours)
-  var officeDays = roundToHalfDay(scanHours * OFFICE_WORK_MULTIPLIER)
+  const scanDays = roundToHalfDay(scanHours)
+  const officeDays = roundToHalfDay(scanHours * OFFICE_WORK_MULTIPLIER)
 
   // Beregn kostnader
-  var scanCost = scanDays * SCAN_DAY_RATE
-  var officeCost = officeDays * OFFICE_DAY_RATE
+  const scanCost = scanDays * SCAN_DAY_RATE
+  const officeCost = officeDays * OFFICE_DAY_RATE
 
   // BIM-kostnad hvis relevant
-  var needsBim = form.deliverables.indexOf('ifc_bim') !== -1
+  const needsBim = form.deliverables.indexOf('ifc_bim') !== -1
                  || form.deliverables.indexOf('2d_drawings') !== -1
-  var bimCost = needsBim ? area * BIM_RATE_PER_M2 : 0
+  const bimCost = needsBim ? area * BIM_RATE_PER_M2 : 0
 
   // Reise og administrasjon
-  var travelCost = estimateTravelCost()
-  var subtotal = scanCost + officeCost + bimCost + travelCost
-  var adminMarkup = subtotal * ADMIN_MARKUP
+  const travelCost = estimateTravelCost()
+  const subtotal = scanCost + officeCost + bimCost + travelCost
+  const adminMarkup = subtotal * ADMIN_MARKUP
 
   // Totalspenn (±)
-  var baseTotal = subtotal + adminMarkup
-  var totalMin = Math.max(MINIMUM_TOTAL, Math.round(baseTotal * 0.90))
-  var totalMax = Math.round(baseTotal * 1.15)
+  const baseTotal = subtotal + adminMarkup
+  const totalMin = Math.max(MINIMUM_TOTAL, Math.round(baseTotal * 0.90))
+  const totalMax = Math.round(baseTotal * 1.15)
 
   return {
     scanner: scanner,
@@ -125,7 +125,7 @@ function calculateEstimate() {
 // ─── Oppdater estimat-panelet ────────────────────────────────────────────────
 
 function showLine(id, value) {
-  var line = document.getElementById(id)
+  const line = document.getElementById(id)
   if (value > 0) {
     line.style.display = 'flex'
     line.querySelector('.value').textContent = formatKr(value)
@@ -135,8 +135,8 @@ function showLine(id, value) {
 }
 
 function updateEstimate() {
-  var emptyHint = document.getElementById('emptyHint')
-  var details = document.getElementById('estimateDetails')
+  const emptyHint = document.getElementById('emptyHint')
+  const details = document.getElementById('estimateDetails')
 
   if (!form.areaM2) {
     emptyHint.style.display = 'block'
@@ -147,7 +147,7 @@ function updateEstimate() {
   emptyHint.style.display = 'none'
   details.style.display = 'block'
 
-  var est = calculateEstimate()
+  const est = calculateEstimate()
 
   // Oppdater hver kostnadslinje
   showLine('lineScan', est.scanCost)
@@ -169,15 +169,15 @@ function updateEstimate() {
 // ─── Knappehåndtering ────────────────────────────────────────────────────────
 
 function setupSingleSelect(groupId, field) {
-  var buttons = document.querySelectorAll('#' + groupId + ' .btn')
+  const buttons = document.querySelectorAll('#' + groupId + ' .btn')
 
-  for (var i = 0; i < buttons.length; i++) {
+  for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', function () {
       form[field] = this.dataset.value
 
       // Oppdater aktiv-klasse på alle knapper i gruppen
-      var siblings = this.parentElement.querySelectorAll('.btn')
-      for (var j = 0; j < siblings.length; j++) {
+      const siblings = this.parentElement.querySelectorAll('.btn')
+      for (let j = 0; j < siblings.length; j++) {
         if (siblings[j].dataset.value === form[field]) {
           siblings[j].classList.add('active')
         } else {
@@ -191,12 +191,12 @@ function setupSingleSelect(groupId, field) {
 }
 
 function setupMultiSelect(groupId, field) {
-  var buttons = document.querySelectorAll('#' + groupId + ' .btn')
+  const buttons = document.querySelectorAll('#' + groupId + ' .btn')
 
-  for (var i = 0; i < buttons.length; i++) {
+  for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', function () {
-      var value = this.dataset.value
-      var index = form[field].indexOf(value)
+      const value = this.dataset.value
+      const index = form[field].indexOf(value)
 
       // Legg til eller fjern fra listen
       if (index === -1) {
