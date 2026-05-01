@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { calculateEstimate, getScannerDisplayName } from '@/lib/pricing'
-import type {
-  InquiryFormData, EstimateResult,
-  ProjectType, ScanPurpose, Deliverable,
-} from '@/types'
-
-type FormData = Partial<InquiryFormData>
+import type { ScanFormData, EstimateResult, ProjectType, ScanPurpose, Deliverable } from '@/types'
 
 const PROJECT_TYPES: { value: ProjectType; label: string }[] = [
   { value: 'office',          label: 'Kontor / Næringsbygg' },
@@ -32,36 +27,46 @@ const DELIVERABLES: { value: Deliverable; label: string }[] = [
   { value: 'virtual_tour', label: 'Virtuell visning' },
 ]
 
-// ─── Estimat-panel (høyre side) ──────────────────────────────────────────────
+function btnClass(active: boolean) {
+  return `p-3 rounded-md text-[13px] font-medium transition-colors ${
+    active
+      ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
+      : 'border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
+  }`
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
+        {title}
+      </p>
+      {children}
+    </section>
+  )
+}
 
 function EstimatePanel({ estimate }: { estimate: EstimateResult | null }) {
   if (!estimate) {
     return (
-      <div className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-4">
-          Estimert pris
-        </p>
+      <Section title="Estimert pris">
         <p className="text-[14px] text-[#9B9B9B] text-center py-6">
           Fyll inn areal for å se estimat.
         </p>
-      </div>
+      </Section>
     )
   }
 
-  const lines: { label: string; value: number }[] = [
-    { label: 'Skanning',       value: estimate.scanCost },
-    { label: 'Etterarbeid',    value: estimate.officeCost },
+  const lines = [
+    { label: 'Skanning',        value: estimate.scanCost },
+    { label: 'Etterarbeid',     value: estimate.officeCost },
     { label: 'BIM-modellering', value: estimate.bimCost },
-    { label: 'Reise',          value: estimate.travelCost },
-    { label: 'Administrasjon', value: estimate.adminMarkup },
+    { label: 'Reise',           value: estimate.travelCost },
+    { label: 'Administrasjon',  value: estimate.adminMarkup },
   ]
 
   return (
-    <div className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-4">
-        Estimert pris
-      </p>
-
+    <Section title="Estimert pris">
       <div className="space-y-2 mb-4">
         {lines.filter(l => l.value > 0).map(({ label, value }) => (
           <div key={label} className="flex justify-between text-[14px]">
@@ -92,17 +97,15 @@ function EstimatePanel({ estimate }: { estimate: EstimateResult | null }) {
       <p className="text-[12px] text-[#9B9B9B] mt-4 text-center">
         Grovestimat. Endelig pris avklares etter befaring.
       </p>
-    </div>
+    </Section>
   )
 }
 
-// ─── Konfigurator ────────────────────────────────────────────────────────────
-
 export default function ConfiguratorPage() {
-  const [form, setForm] = useState<FormData>({})
+  const [form, setForm] = useState<Partial<ScanFormData>>({})
   const [estimate, setEstimate] = useState<EstimateResult | null>(null)
 
-  const update = (data: Partial<InquiryFormData>) => {
+  const update = (data: Partial<ScanFormData>) => {
     const next = { ...form, ...data }
     setForm(next)
     if (next.areaM2) setEstimate(calculateEstimate(next))
@@ -116,7 +119,6 @@ export default function ConfiguratorPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F4]">
-      {/* Header */}
       <div className="bg-white border-b border-[#E8E8E8]">
         <div className="max-w-[1100px] mx-auto px-8 py-4 flex items-center gap-2">
           <span className="text-[16px] font-extrabold text-[#0C0C0C]">nti</span>
@@ -126,61 +128,30 @@ export default function ConfiguratorPage() {
         </div>
       </div>
 
-      {/* Innhold */}
       <div className="max-w-[1100px] mx-auto px-8 py-10 flex gap-8 items-start">
-
-        {/* Venstre: Input */}
         <main className="flex-1 space-y-6">
 
-          {/* Prosjekttype */}
-          <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
-              Prosjekttype
-            </p>
+          <Section title="Prosjekttype">
             <div className="grid grid-cols-3 gap-2">
               {PROJECT_TYPES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => update({ projectType: value })}
-                  className={`p-3 rounded-md text-[13px] font-medium text-center transition-all ${
-                    form.projectType === value
-                      ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
-                      : 'border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
-                  }`}
-                >
+                <button key={value} onClick={() => update({ projectType: value })} className={btnClass(form.projectType === value)}>
                   {label}
                 </button>
               ))}
             </div>
-          </section>
+          </Section>
 
-          {/* Formål */}
-          <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
-              Formål med skanningen
-            </p>
+          <Section title="Formål med skanningen">
             <div className="grid grid-cols-2 gap-2">
               {SCAN_PURPOSES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => update({ scanPurpose: value })}
-                  className={`p-3 rounded-md text-[13px] font-medium text-left transition-all ${
-                    form.scanPurpose === value
-                      ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
-                      : 'border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
-                  }`}
-                >
+                <button key={value} onClick={() => update({ scanPurpose: value })} className={`${btnClass(form.scanPurpose === value)} text-left`}>
                   {label}
                 </button>
               ))}
             </div>
-          </section>
+          </Section>
 
-          {/* Areal og postnummer */}
-          <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
-              Omfang og lokasjon
-            </p>
+          <Section title="Omfang og lokasjon">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[13px] font-medium text-[#3D3D3D] mb-1">Areal (m²)</label>
@@ -205,58 +176,33 @@ export default function ConfiguratorPage() {
                 />
               </div>
             </div>
-          </section>
+          </Section>
 
-          {/* Leveranser */}
-          <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
-              Leveranser
-            </p>
+          <Section title="Leveranser">
             <div className="flex flex-wrap gap-2">
               {DELIVERABLES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => toggleDeliverable(value)}
-                  className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all ${
-                    selected.includes(value)
-                      ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
-                      : 'border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
-                  }`}
-                >
+                <button key={value} onClick={() => toggleDeliverable(value)} className={`${btnClass(selected.includes(value))} px-4 py-2`}>
                   {label}
                 </button>
               ))}
             </div>
-          </section>
+          </Section>
 
-          {/* Presisjonsnivå */}
-          <section className="bg-white border border-[#E8E8E8] rounded-lg p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9B9B9B] mb-3">
-              Presisjonsnivå
-            </p>
+          <Section title="Presisjonsnivå">
             <div className="grid grid-cols-2 gap-2">
               {([
                 { value: 'standard' as const, label: 'Standard (±10mm)' },
                 { value: 'high' as const,     label: 'Høy presisjon (±4mm)' },
               ]).map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => update({ precisionLevel: value })}
-                  className={`p-3 rounded-md text-[13px] font-medium text-center transition-all ${
-                    form.precisionLevel === value
-                      ? 'border-2 border-[#0C0C0C] bg-[#FAFAFA] text-[#0C0C0C]'
-                      : 'border border-[#E8E8E8] text-[#6B6B6B] hover:border-[#0C0C0C]'
-                  }`}
-                >
+                <button key={value} onClick={() => update({ precisionLevel: value })} className={`${btnClass(form.precisionLevel === value)} text-center`}>
                   {label}
                 </button>
               ))}
             </div>
-          </section>
+          </Section>
 
         </main>
 
-        {/* Høyre: Estimat */}
         <aside className="w-80 shrink-0 sticky top-20">
           <EstimatePanel estimate={estimate} />
         </aside>

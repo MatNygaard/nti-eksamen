@@ -1,4 +1,4 @@
-import type { InquiryFormData, EstimateResult, ScannerType, Deliverable } from '@/types'
+import type { ScanFormData, EstimateResult, ScannerType, Deliverable } from '@/types'
 
 // Dagsatser
 const SCAN_DAY_RATE = 17_500
@@ -28,7 +28,7 @@ const SCAN_HOURS_PER_1000M2: Record<ScannerType, Record<'office' | 'open', numbe
  * Velger scanner basert på formål og presisjonsnivå.
  * Mapper til ScanMethode.accuracyLevel i klassediagrammet.
  */
-function selectScanner(data: Partial<InquiryFormData>): ScannerType {
+function selectScanner(data: Partial<ScanFormData>): ScannerType {
   const { scanPurpose, precisionLevel } = data
   if (precisionLevel === 'high') return 'blk360_g2'
   if (scanPurpose === 'visualization') return 'matterport_pro3'
@@ -63,7 +63,7 @@ function estimateTravelCost(postalCode: string): number {
   return TRAVEL_HOURLY_RATE * 2
 }
 
-export function calculateEstimate(data: Partial<InquiryFormData>): EstimateResult {
+export function calculateEstimate(data: Partial<ScanFormData>): EstimateResult {
   const areaM2 = data.areaM2 ?? 0
   const projectType = data.projectType ?? 'office'
 
@@ -98,7 +98,7 @@ export function calculateEstimate(data: Partial<InquiryFormData>): EstimateResul
   const totalMax = Math.round(baseTotal * 1.15)
 
   return {
-    scannerType, scanHours, scanDays, officeDays,
+    scannerType, scanDays, officeDays,
     scanCost, officeCost, bimCost, travelCost, adminMarkup,
     totalMin, totalMax,
   }

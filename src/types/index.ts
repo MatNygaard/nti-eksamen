@@ -28,7 +28,7 @@ export type Deliverable =
   | 'ifc_bim'
   | 'virtual_tour'
 
-export interface InquiryFormData {
+export interface ScanFormData {
   projectType: ProjectType
   scanPurpose: ScanPurpose
   areaM2: number
@@ -39,7 +39,6 @@ export interface InquiryFormData {
 
 export interface EstimateResult {
   scannerType: ScannerType
-  scanHours: number
   scanDays: number
   officeDays: number
   scanCost: number
