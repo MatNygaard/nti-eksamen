@@ -209,14 +209,12 @@ function setupSingleSelect(groupId, field) {
     buttons[i].addEventListener('click', function () {
       form[field] = this.dataset.value
 
+      // Fjern "active" fra alle, legg til på den som ble klikket
       const siblings = this.parentElement.querySelectorAll('.btn')
       for (let j = 0; j < siblings.length; j++) {
-        if (siblings[j].dataset.value === form[field]) {
-          siblings[j].classList.add('active')
-        } else {
-          siblings[j].classList.remove('active')
-        }
+        siblings[j].classList.remove('active')
       }
+      this.classList.add('active')
 
       updateEstimate()
     })
@@ -233,15 +231,12 @@ function setupMultiSelect(groupId, field) {
       const value = this.dataset.value
       const index = form[field].indexOf(value)
 
+      // Legg til eller fjern fra listen, og oppdater klassen
       if (index === -1) {
         form[field].push(value)
-      } else {
-        form[field].splice(index, 1)
-      }
-
-      if (form[field].indexOf(value) !== -1) {
         this.classList.add('active')
       } else {
+        form[field].splice(index, 1)
         this.classList.remove('active')
       }
 
