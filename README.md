@@ -18,19 +18,15 @@ cd nti-eksamen
 
 # Installer avhengigheter
 npm install
-
-# Sett opp miljøvariabler
-cp .env.example .env
-# Rediger .env og legg inn Supabase-verdier
 ```
 
 ### Kjør lokalt
 
 ```bash
-npm run dev
+npm start
 ```
 
-Åpne http://localhost:5173
+Åpne http://localhost:3000
 
 ## Funksjonalitet
 
@@ -45,6 +41,5 @@ Prisestimat beregnes live basert på inputs.
 
 ## Teknologi
 
-- React + Vite + TypeScript
-- Tailwind CSS
-- Supabase (database)
+- HTML, CSS og vanilla JavaScript
+- Express (Node.js) som statisk server
